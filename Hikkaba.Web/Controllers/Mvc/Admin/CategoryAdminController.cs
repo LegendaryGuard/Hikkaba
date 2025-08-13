@@ -110,7 +110,7 @@ public sealed class CategoryAdminController : BaseMvcController
     }
 
     [HttpGet("create", Name = "CategoryCreate")]
-    public IActionResult Create()
+    public IActionResult Create(CancellationToken cancellationToken)
     {
         var viewModel = new CategoryCreateViewModel
         {

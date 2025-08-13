@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using BBCodeParser;
 using Hikkaba.Application;
 using Hikkaba.Data;
@@ -197,5 +198,57 @@ internal sealed class ArchitectureTests
         var failingTypeNames = result.FailingTypeNames ?? [];
 
         Assert.That(result.IsSuccessful, Is.True, $"Some libraries depend on other assemblies: {string.Join(", ", failingTypeNames)}");
+    }
+
+    [Test]
+    public void Controllers_ShouldHaveCancellationTokenParameters()
+    {
+        var controllerTypes = Types
+            .InAssembly(typeof(HikkabaWebAssemblyInfo).Assembly)
+            .That()
+            .DoNotHaveNameMatching(".*Test.*")
+            .And()
+            .Inherit(typeof(Microsoft.AspNetCore.Mvc.ControllerBase))
+            .GetTypes();
+
+        var methodsWithoutCancellationToken = new List<string>();
+        var methodsWithImproperTokenNaming = new List<string>();
+
+        foreach (var controllerType in controllerTypes)
+        {
+            var actionMethods = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.DeclaringType == controllerType)
+                .Where(m => !m.IsSpecialName)
+                .Where(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpGetAttribute), false).Length != 0
+                            || m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpPatchAttribute), false).Length != 0
+                            || m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpPostAttribute), false).Length != 0
+                            || m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpPutAttribute), false).Length != 0);
+
+            foreach (var method in actionMethods)
+            {
+                var parameters = method.GetParameters();
+                var cancellationTokenParam = parameters.FirstOrDefault(p => p.ParameterType == typeof(CancellationToken));
+
+                if (cancellationTokenParam is null)
+                {
+                    methodsWithoutCancellationToken.Add($"{controllerType.Name}.{method.Name}");
+                }
+                else
+                {
+                    // We could also allow here certain spelling versions
+                    var allowedNames = new[] { "cancellationToken" };
+                    if (!allowedNames.Contains(cancellationTokenParam.Name))
+                    {
+                        methodsWithImproperTokenNaming.Add($"{controllerType.Name}.{method.Name} (parameter: {cancellationTokenParam.Name})");
+                    }
+                }
+            }
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(methodsWithoutCancellationToken, Is.Empty, $"The following controller action methods don't have CancellationToken parameters: {string.Join(", ", methodsWithoutCancellationToken)}");
+            Assert.That(methodsWithImproperTokenNaming, Is.Empty, $"The following controller action methods have improperly named CancellationToken parameters: {string.Join(", ", methodsWithImproperTokenNaming)}");
+        });
     }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using System.Threading.Tasks;
 using Hikkaba.Shared.Constants;
 using Microsoft.AspNetCore.Authorization;
@@ -41,7 +42,8 @@ public sealed class AttachmentsController : ControllerBase
         [Required] [FromRoute] [MaxLength(Defaults.MaxGuidLength)] string blobContainerId,
         [Required] [FromRoute] [MaxLength(Defaults.MaxGuidLength)] string blobId,
         [Required] [FromQuery] [MaxLength(Defaults.MaxFileExtensionLength)] string fileExtension,
-        [FromQuery] bool getThumbnail)
+        [FromQuery] bool getThumbnail,
+        CancellationToken cancellationToken)
     {
         HttpContext.Response.Headers[HeaderNames.LastModified] = Defaults.DefaultLastModified;
 
