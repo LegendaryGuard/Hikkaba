@@ -29,7 +29,9 @@ public sealed class AttachmentsController : ControllerBase
 
     private string GetContentTypeByFileName(string fileName)
     {
-        return _contentTypeProvider.TryGetContentType(fileName, out var contentType) ? contentType : Defaults.DefaultMimeType;
+        return _contentTypeProvider.TryGetContentType(fileName, out var contentType)
+            ? contentType
+            : Defaults.DefaultMimeType;
     }
 
     [HttpGet("{blobContainerId}/{blobId}", Name = "AttachmentsGet")]
@@ -65,6 +67,7 @@ public sealed class AttachmentsController : ControllerBase
 
         var cd = new ContentDispositionHeaderValue("inline") { FileNameStar = fileName };
         Response.Headers[HeaderNames.ContentDisposition] = cd.ToString();
+
         return File(blobStream, contentType);
     }
 }
