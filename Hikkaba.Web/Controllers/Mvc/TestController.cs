@@ -1,5 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hikkaba.Web.Controllers.Mvc;
@@ -9,21 +11,21 @@ namespace Hikkaba.Web.Controllers.Mvc;
 public sealed class TestController : Controller
 {
     [HttpGet("status400")]
-    public IActionResult Status400()
+    public Results<Ok, BadRequest> Status400()
     {
-        return new BadRequestResult();
+        return TypedResults.BadRequest();
     }
 
     [HttpGet("status404")]
-    public IActionResult Status404()
+    public Results<Ok, NotFound> Status404()
     {
-        return new NotFoundResult();
+        return TypedResults.NotFound();
     }
 
     [HttpGet("status500")]
-    public IActionResult Status500()
+    public Results<Ok, InternalServerError> Status500()
     {
-        return new StatusCodeResult(500);
+        return TypedResults.InternalServerError();
     }
 
     [HttpGet("exception")]
