@@ -55,7 +55,7 @@ internal sealed class AtLeastOnePropertyAttribute : ValidationAttribute
             return false;
         }
 
-        var errorMessage = ErrorMessage ?? $"At least one property must be set: {string.Join(", ", PropertyList)}";
+        var errorMessage = ErrorMessage ?? $"At least one property must be set: {string.Join(", ", PropertyList)}.";
 
         return PropertyList.Any(HasData)
             ? ValidationResult.Success

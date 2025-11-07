@@ -369,7 +369,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Category with alias {createRequestModel.BaseModel.CategoryAlias} not found",
+                ErrorMessage = $"Category with alias {createRequestModel.BaseModel.CategoryAlias} not found.",
             };
         }
 
@@ -458,7 +458,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Thread with id {editRequestModel.Id} not found",
+                ErrorMessage = $"Thread with id {editRequestModel.Id} not found.",
             };
         }
 
@@ -481,7 +481,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Thread with id {threadId} not found",
+                ErrorMessage = $"Thread with id {threadId} not found.",
             };
         }
 
@@ -503,7 +503,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Thread with id {threadId} not found",
+                ErrorMessage = $"Thread with id {threadId} not found.",
             };
         }
 
@@ -524,7 +524,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Thread with id {threadId} not found",
+                ErrorMessage = $"Thread with id {threadId} not found.",
             };
         }
 
@@ -545,7 +545,7 @@ public sealed class ThreadRepository : IThreadRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = $"Thread with id {threadId} not found",
+                ErrorMessage = $"Thread with id {threadId} not found.",
             };
         }
 

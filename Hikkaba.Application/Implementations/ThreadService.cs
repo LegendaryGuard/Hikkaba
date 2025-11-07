@@ -73,7 +73,7 @@ public sealed class ThreadService : IThreadService
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = "Error processing request",
+                ErrorMessage = "Error processing request.",
             };
         }
         else if (postingRestrictionStatus is PostingRestrictionsResponseBanModel banPostingRestrictionsModel)
@@ -81,7 +81,7 @@ public sealed class ThreadService : IThreadService
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.Forbidden,
-                ErrorMessage = $"Posting is restricted. Reason: {banPostingRestrictionsModel.RestrictionReason}, expires: {banPostingRestrictionsModel.RestrictionEndsAt}",
+                ErrorMessage = $"Posting is restricted. Reason: {banPostingRestrictionsModel.RestrictionReason}, expires: {banPostingRestrictionsModel.RestrictionEndsAt}.",
             };
         }
         else if (postingRestrictionStatus.RestrictionType != PostingRestrictionType.NoRestriction

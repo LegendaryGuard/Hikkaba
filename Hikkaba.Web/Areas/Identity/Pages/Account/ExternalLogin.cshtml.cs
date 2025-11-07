@@ -104,7 +104,7 @@ public class ExternalLoginModel : PageModel
         returnUrl = returnUrl ?? Url.Content("~/");
         if (remoteError != null)
         {
-            ErrorMessage = $"Error from external provider: {remoteError}";
+            ErrorMessage = $"Error from external provider: {remoteError}.";
             return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
         }
         var info = await _signInManager.GetExternalLoginInfoAsync();

@@ -116,7 +116,7 @@ public sealed class ThreadController : BaseMvcController
     }
 
     [HttpPost("/{categoryAlias}/create", Name = "ThreadCreateConfirm")]
-    [ValidateDNTCaptcha(ErrorMessage = "Please enter the security code as a number")]
+    [ValidateDNTCaptcha(ErrorMessage = "Please enter the security code as a number.")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateConfirm(
         [Required] [FromRoute] [MaxLength(Defaults.MaxCategoryAliasLength)]

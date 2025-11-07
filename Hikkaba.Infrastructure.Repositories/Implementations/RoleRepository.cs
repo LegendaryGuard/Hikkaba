@@ -46,7 +46,7 @@ public sealed class RoleRepository : IRoleRepository
             : new DomainError
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = $"Role creation failed: {result}",
+                ErrorMessage = $"Role creation failed: {result}.",
             };
     }
 
@@ -59,7 +59,7 @@ public sealed class RoleRepository : IRoleRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = "Role not found",
+                ErrorMessage = "Role not found.",
             };
         }
 
@@ -71,7 +71,7 @@ public sealed class RoleRepository : IRoleRepository
             : new DomainError
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = $"Role update failed: {result}",
+                ErrorMessage = $"Role update failed: {result}.",
             };
     }
 
@@ -84,7 +84,7 @@ public sealed class RoleRepository : IRoleRepository
             return new DomainError
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
-                ErrorMessage = "Role not found",
+                ErrorMessage = "Role not found.",
             };
         }
 
@@ -95,7 +95,7 @@ public sealed class RoleRepository : IRoleRepository
             : new DomainError
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = $"Role deletion failed: {result}",
+                ErrorMessage = $"Role deletion failed: {result}.",
             };
     }
 }

@@ -179,7 +179,7 @@ public sealed class UserRepository : IUserRepository
             : new DomainError
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                ErrorMessage = $"User creation failed: {result}",
+                ErrorMessage = $"User creation failed: {result}.",
             };
     }
 

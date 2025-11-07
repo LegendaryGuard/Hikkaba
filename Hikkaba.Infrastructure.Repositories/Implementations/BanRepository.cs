@@ -364,7 +364,7 @@ public sealed class BanRepository : IBanRepository
                 return new DomainError
                 {
                     StatusCode = (int)HttpStatusCode.Conflict,
-                    ErrorMessage = "User was already banned for this post",
+                    ErrorMessage = "User was already banned for this post.",
                 };
             }
         }
