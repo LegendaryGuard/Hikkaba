@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <UserSecretsId>aspnet-Hikkaba.Web-3E363644-2AE5-4DC0-B12C-4896CBFF1BE6</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
