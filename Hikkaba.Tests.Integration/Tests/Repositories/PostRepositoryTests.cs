@@ -14,6 +14,7 @@ using Hikkaba.Paging.Models;
 using Hikkaba.Shared.Constants;
 using Hikkaba.Tests.Integration.Constants;
 using Hikkaba.Tests.Integration.Extensions;
+using Hikkaba.Tests.Integration.Models;
 using Hikkaba.Tests.Integration.Services;
 using Hikkaba.Tests.Integration.Utils;
 using JetBrains.Annotations;
@@ -44,10 +45,24 @@ internal sealed class PostRepositoryTests
     }
 
     [MustDisposeResource]
-    private async Task<CustomAppFactory> CreateAppFactoryAsync()
+    private async Task<ISeedResult> Seed(CancellationToken cancellationToken)
     {
         var connectionString = await _contextManager!.CreateRespawnedDbConnectionStringAsync();
-        return new CustomAppFactory(connectionString);
+        var customAppFactory = new CustomAppFactory(connectionString);
+
+        var scope = customAppFactory.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if ((await dbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+        {
+            await dbContext.Database.MigrateAsync(cancellationToken);
+        }
+
+        return new SeedResult
+        {
+            Scope = scope,
+            AppFactory = customAppFactory,
+        };
     }
 
     [CancelAfter(TestDefaults.TestTimeout)]
@@ -63,17 +78,11 @@ internal sealed class PostRepositoryTests
         CancellationToken cancellationToken)
     {
         // Arrange
-        await using var customAppFactory = await CreateAppFactoryAsync();
-        using var scope = customAppFactory.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
-        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var hashService = scope.ServiceProvider.GetRequiredService<IHashService>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<PostRepositoryTests>>();
-
-        if ((await dbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
-        {
-            await dbContext.Database.MigrateAsync(cancellationToken);
-        }
+        using var seedResult = await Seed(cancellationToken);
+        var dbContext = seedResult.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var hashService = seedResult.Scope.ServiceProvider.GetRequiredService<IHashService>();
+        var timeProvider = seedResult.Scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        var logger = seedResult.Scope.ServiceProvider.GetRequiredService<ILogger<PostRepositoryTests>>();
 
         // Seed
         var admin = new ApplicationUser
@@ -165,7 +174,7 @@ internal sealed class PostRepositoryTests
 
         await DbUtils.WaitForFulltextIndexAsync(logger, dbContext, ["Posts", "Threads"], cancellationToken: cancellationToken);
 
-        var repository = scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = seedResult.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.SearchPostsPaginatedAsync(new SearchPostsPagingFilter
