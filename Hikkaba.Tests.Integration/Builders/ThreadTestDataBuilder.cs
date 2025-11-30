@@ -18,7 +18,7 @@ namespace Hikkaba.Tests.Integration.Builders;
 
 internal sealed class ThreadTestDataBuilder
 {
-    private static readonly GuidGenerator GuidGenerator = new();
+    private readonly GuidGenerator _guidGenerator = new();
 
     private readonly ApplicationDbContext _dbContext;
     private readonly List<Category> _categories = [];
@@ -57,20 +57,25 @@ internal sealed class ThreadTestDataBuilder
         return this;
     }
 
-    public ThreadTestDataBuilder WithCategory(string alias, string name)
+    public ThreadTestDataBuilder WithCategory(
+        string alias,
+        string name,
+        bool isDeleted = false,
+        int defaultBumpLimit = 500,
+        bool showThreadLocalUserHash = false)
     {
         EnsureAdminExists();
 
         var category = new Category
         {
-            IsDeleted = false,
+            IsDeleted = isDeleted,
             CreatedAt = TimeProvider.GetUtcNow().UtcDateTime,
             ModifiedAt = null,
             Alias = alias,
             Name = name,
             IsHidden = false,
-            DefaultBumpLimit = 500,
-            ShowThreadLocalUserHash = false,
+            DefaultBumpLimit = defaultBumpLimit,
+            ShowThreadLocalUserHash = showThreadLocalUserHash,
             ShowOs = false,
             ShowBrowser = false,
             ShowCountry = false,
@@ -91,6 +96,7 @@ internal sealed class ThreadTestDataBuilder
         string title,
         bool isPinned = false,
         bool isClosed = false,
+        bool isCyclic = false,
         bool isDeleted = false,
         int bumpLimit = 500,
         DateTime? createdAt = null,
@@ -106,13 +112,48 @@ internal sealed class ThreadTestDataBuilder
             Title = title,
             IsPinned = isPinned,
             IsClosed = isClosed,
+            IsCyclic = isCyclic,
             IsDeleted = isDeleted,
             BumpLimit = bumpLimit,
-            Salt = GuidGenerator.GenerateSeededGuid(),
+            Salt = _guidGenerator.GenerateSeededGuid(),
             Category = category,
         };
         _threads.Add(thread);
         _dbContext.Threads.Add(thread);
+        return this;
+    }
+
+    public ThreadTestDataBuilder WithThreadAndOp(
+        string categoryAlias,
+        string title,
+        bool isPinned = false,
+        bool isClosed = false,
+        bool isCyclic = false,
+        bool isDeleted = false,
+        int bumpLimit = 500,
+        DateTime? createdAt = null,
+        DateTime? lastBumpAt = null)
+    {
+        WithThread(categoryAlias, title, isPinned, isClosed, isCyclic, isDeleted, bumpLimit, createdAt, lastBumpAt);
+
+        var thread = GetThread(title);
+        var ip = IPAddress.Parse("127.0.0.1").GetAddressBytes();
+
+        var post = new Post
+        {
+            IsOriginalPost = true,
+            BlobContainerId = _guidGenerator.GenerateSeededGuid(),
+            CreatedAt = thread.CreatedAt,
+            IsSageEnabled = false,
+            IsDeleted = false,
+            MessageText = $"OP post in {title}",
+            MessageHtml = $"OP post in {title}",
+            UserIpAddress = ip,
+            UserAgent = "Firefox",
+            ThreadLocalUserHash = HashService.GetHashBytes(thread.Salt, ip),
+            Thread = thread,
+        };
+        _dbContext.Posts.Add(post);
         return this;
     }
 
@@ -126,14 +167,14 @@ internal sealed class ThreadTestDataBuilder
 
     public ThreadTestDataBuilder WithPost(
         string threadTitle,
-        Guid blobContainerId,
         string messageText,
         string ipAddress = "127.0.0.1",
         string userAgent = "Firefox",
         bool isOriginalPost = false,
         bool isSageEnabled = false,
         bool isDeleted = false,
-        TimeSpan? createdAtOffset = null)
+        TimeSpan? createdAtOffset = null,
+        Guid? blobContainerId = null)
     {
         var thread = GetThread(threadTitle);
         var ip = IPAddress.Parse(ipAddress);
@@ -141,7 +182,7 @@ internal sealed class ThreadTestDataBuilder
         var post = new Post
         {
             IsOriginalPost = isOriginalPost,
-            BlobContainerId = blobContainerId,
+            BlobContainerId = blobContainerId ?? _guidGenerator.GenerateSeededGuid(),
             CreatedAt = TimeProvider.GetUtcNow().UtcDateTime.Add(createdAtOffset ?? TimeSpan.Zero),
             IsSageEnabled = isSageEnabled,
             IsDeleted = isDeleted,
@@ -158,13 +199,13 @@ internal sealed class ThreadTestDataBuilder
 
     public ThreadTestDataBuilder WithPostWithAudio(
         string threadTitle,
-        Guid blobContainerId,
         string messageText,
-        Guid audioBlobId,
         string audioFileName,
         string ipAddress = "127.0.0.1",
         string userAgent = "Chrome",
-        TimeSpan? createdAtOffset = null)
+        TimeSpan? createdAtOffset = null,
+        Guid? blobContainerId = null,
+        Guid? audioBlobId = null)
     {
         var thread = GetThread(threadTitle);
         var ip = IPAddress.Parse(ipAddress);
@@ -172,7 +213,7 @@ internal sealed class ThreadTestDataBuilder
         var post = new Post
         {
             IsOriginalPost = false,
-            BlobContainerId = blobContainerId,
+            BlobContainerId = blobContainerId ?? _guidGenerator.GenerateSeededGuid(),
             CreatedAt = TimeProvider.GetUtcNow().UtcDateTime.Add(createdAtOffset ?? TimeSpan.Zero),
             IsSageEnabled = false,
             MessageText = messageText,
@@ -185,7 +226,7 @@ internal sealed class ThreadTestDataBuilder
             [
                 new Audio
                 {
-                    BlobId = audioBlobId,
+                    BlobId = audioBlobId ?? _guidGenerator.GenerateSeededGuid(),
                     FileNameWithoutExtension = audioFileName,
                     FileExtension = "mp3",
                     FileSize = 3671469,
@@ -204,13 +245,13 @@ internal sealed class ThreadTestDataBuilder
 
     public ThreadTestDataBuilder WithPostWithPicture(
         string threadTitle,
-        Guid blobContainerId,
         string messageText,
-        Guid pictureBlobId,
         string pictureFileName,
         string ipAddress = "127.0.0.1",
         string userAgent = "Chrome",
-        TimeSpan? createdAtOffset = null)
+        TimeSpan? createdAtOffset = null,
+        Guid? blobContainerId = null,
+        Guid? pictureBlobId = null)
     {
         var thread = GetThread(threadTitle);
         var ip = IPAddress.Parse(ipAddress);
@@ -218,7 +259,7 @@ internal sealed class ThreadTestDataBuilder
         var post = new Post
         {
             IsOriginalPost = false,
-            BlobContainerId = blobContainerId,
+            BlobContainerId = blobContainerId ?? _guidGenerator.GenerateSeededGuid(),
             CreatedAt = TimeProvider.GetUtcNow().UtcDateTime.Add(createdAtOffset ?? TimeSpan.Zero),
             IsSageEnabled = false,
             MessageText = messageText,
@@ -231,7 +272,7 @@ internal sealed class ThreadTestDataBuilder
             [
                 new Picture
                 {
-                    BlobId = pictureBlobId,
+                    BlobId = pictureBlobId ?? _guidGenerator.GenerateSeededGuid(),
                     FileNameWithoutExtension = pictureFileName,
                     FileExtension = "jpg",
                     FileSize = 204316,
@@ -263,7 +304,7 @@ internal sealed class ThreadTestDataBuilder
     {
         var category = GetCategory(categoryAlias);
         var utcNow = threadCreatedAt ?? TimeProvider.GetUtcNow().UtcDateTime;
-        var salt = GuidGenerator.GenerateSeededGuid();
+        var salt = _guidGenerator.GenerateSeededGuid();
 
         var thread = new Thread
         {
@@ -285,7 +326,7 @@ internal sealed class ThreadTestDataBuilder
                 return new Post
                 {
                     IsOriginalPost = i == 0,
-                    BlobContainerId = GuidGenerator.GenerateSeededGuid(),
+                    BlobContainerId = _guidGenerator.GenerateSeededGuid(),
                     CreatedAt = TimeProvider.GetUtcNow().UtcDateTime.AddMinutes(i),
                     IsSageEnabled = allPostsSage || i % 2 == 0,
                     IsDeleted = false,
@@ -305,7 +346,7 @@ internal sealed class ThreadTestDataBuilder
             posts.Add(new Post
             {
                 IsOriginalPost = false,
-                BlobContainerId = GuidGenerator.GenerateSeededGuid(),
+                BlobContainerId = _guidGenerator.GenerateSeededGuid(),
                 CreatedAt = TimeProvider.GetUtcNow().UtcDateTime.AddYears(1),
                 IsSageEnabled = false,
                 IsDeleted = true,
@@ -361,7 +402,7 @@ internal sealed class ThreadTestDataBuilder
             var post = new Post
             {
                 IsOriginalPost = thread.Posts.Count == 0 && i == 0,
-                BlobContainerId = GuidGenerator.GenerateSeededGuid(),
+                BlobContainerId = _guidGenerator.GenerateSeededGuid(),
                 CreatedAt = startingAt.AddSeconds(i),
                 IsSageEnabled = isSageEnabled,
                 IsDeleted = isDeleted,
@@ -380,10 +421,24 @@ internal sealed class ThreadTestDataBuilder
     public ThreadTestDataBuilder UpdateThreadLastBumpAt(string threadTitle)
     {
         var thread = GetThread(threadTitle);
-        var lastNonSagePost = thread.Posts.Where(p => p is { IsSageEnabled: false, IsDeleted: false }).MaxBy(p => p.CreatedAt);
-        if (lastNonSagePost != null)
+
+        // Get non-sage, non-deleted posts ordered by creation date
+        var eligiblePosts = thread.Posts
+            .Where(p => p is { IsSageEnabled: false, IsDeleted: false })
+            .OrderBy(p => p.CreatedAt)
+            .ToList();
+
+        // If bump limit is set, only posts within the limit can bump the thread
+        var bumpLimit = thread.BumpLimit;
+        if (bumpLimit > 0 && eligiblePosts.Count > bumpLimit)
         {
-            thread.LastBumpAt = lastNonSagePost.CreatedAt;
+            eligiblePosts = eligiblePosts.Take(bumpLimit).ToList();
+        }
+
+        var lastEligiblePost = eligiblePosts.LastOrDefault();
+        if (lastEligiblePost != null)
+        {
+            thread.LastBumpAt = lastEligiblePost.CreatedAt;
         }
         return this;
     }

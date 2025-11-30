@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hikkaba.Data.Context;
-using Hikkaba.Data.Entities;
 using Hikkaba.Infrastructure.Models.Post;
 using Hikkaba.Infrastructure.Repositories.Contracts;
 using Hikkaba.Paging.Enums;
@@ -19,11 +18,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Hikkaba.Tests.Integration.Tests.Repositories;
+namespace Hikkaba.Tests.Integration.Tests.Repositories.Post;
 
 [TestFixture]
 [Parallelizable(scope: ParallelScope.Fixtures)]
-internal sealed class PostRepositoryTests
+internal sealed class SearchPostsTests
 {
     private RespawnableContextManager<ApplicationDbContext>? _contextManager;
 
@@ -64,22 +63,22 @@ internal sealed class PostRepositoryTests
     {
         await new PostTestDataBuilder(scope)
             .WithDefaultAdmin()
-            .WithCategory("b", "Random CategorySearchTerm")
-            .WithThread("BoardThreadPostSearchTerm thread 1 ThreadAndPostSearchTerm")
-            .WithPost(new Guid("243D7DB4-4EE8-4285-8888-E7185A7CB1B2"), "BoardThreadPostSearchTerm post 1 Post1SearchTerm", "127.0.0.1", "Firefox", isOriginalPost: true)
-            .WithPost(new Guid("D9AED982-37D6-4C5C-B235-E1AADC342236"), "BoardThreadPostSearchTerm post 2 Post2SearchTerm", "127.0.0.1", "Chrome")
-            .WithPost(new Guid("C8393E45-20AE-4214-A1EF-5F6AE0D93477"), "BoardThreadPostSearchTerm Post1SearchTerm Post2SearchTerm BoardSearchTerm CategorySearchTerm ThreadAndPostSearchTerm", "127.0.0.1", "Chrome", isDeleted: true)
+            .WithCategory("b", "category")
+            .WithThread("thread")
+            .WithPost("post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("blah blah blah", "127.0.0.1", "Chrome")
+            .WithPost("blah blah post blah", "127.0.0.1", "Chrome")
+            .WithPost("blah blah post blah", "127.0.0.1", "Chrome", isDeleted: true)
             .SaveAsync(cancellationToken);
     }
 
     [CancelAfter(TestDefaults.TestTimeout)]
-    [TestCase("BoardSearchTerm", 0)]
-    [TestCase("CategorySearchTerm", 0)]
-    [TestCase("ThreadAndPostSearchTerm", 1, Ignore = "Temporary disabled due to ongoing query performance improvements")]
-    [TestCase("BoardThreadPostSearchTerm", 2)]
-    [TestCase("Post1SearchTerm", 1)]
-    [TestCase("Post2SearchTerm", 1)]
-    public async Task SearchPostsPaginatedAsync_WhenSearchQueryIsProvided_ReturnsExpectedResultsAsync(
+    [TestCase("category", 0)] // we only search by post content and thread title
+    [TestCase("thread", 1, Ignore = "Temporary disabled due to ongoing query performance improvements")] // search by thread title is temporarily disabled
+    [TestCase("post", 2)] // only 2 non-deleted posts are returned
+    [TestCase("blah", 2)] // only 2 non-deleted posts are returned
+    [TestCase("hedgehog", 0)] // no results
+    public async Task SearchPosts_WhenSearchQueryIsProvided_ReturnsExpectedResultsAsync(
         string searchQuery,
         int expectedCount,
         CancellationToken cancellationToken)
@@ -89,17 +88,17 @@ internal sealed class PostRepositoryTests
         await SeedSearchPostsDataAsync(appScope.Scope, cancellationToken);
 
         var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var logger = appScope.Scope.ServiceProvider.GetRequiredService<ILogger<PostRepositoryTests>>();
+        var logger = appScope.Scope.ServiceProvider.GetRequiredService<ILogger<SearchPostsTests>>();
         await DbUtils.WaitForFulltextIndexAsync(logger, dbContext, ["Posts", "Threads"], cancellationToken: cancellationToken);
 
         var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
-        var result = await repository.SearchPostsPaginatedAsync(new SearchPostsPagingFilter
+        var result = await repository.SearchPostsAsync(new SearchPostsPagingFilter
         {
             PageNumber = 1,
             PageSize = 10,
-            OrderBy = [new OrderByItem { Field = nameof(Post.CreatedAt), Direction = OrderByDirection.Desc }],
+            OrderBy = [new OrderByItem { Field = nameof(Hikkaba.Data.Entities.Post.CreatedAt), Direction = OrderByDirection.Desc }],
             SearchQuery = searchQuery,
         }, cancellationToken);
 
