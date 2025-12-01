@@ -53,7 +53,7 @@ public class Ban : IHasAuditColumns
     public required string Reason { get; set; }
 
     // FK id
-    [ForeignKey(nameof(RelatedPost))]
+    /* this is not a FK, because the post may be deleted at some point */
     public long? RelatedPostId { get; set; }
 
     [ForeignKey(nameof(Category))]
@@ -66,8 +66,6 @@ public class Ban : IHasAuditColumns
     public int? ModifiedById { get; set; }
 
     // FK models
-    public virtual Post? RelatedPost { get; set; }
-
     public virtual Category? Category { get; set; }
 
     [Required]
