@@ -17,14 +17,14 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
-            .WithThreadAndOp("b", "Test thread");
+            .WithThreadAndOp("Test thread");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Test thread");
 
         // Act
@@ -49,13 +49,13 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
 
         // Act
         var result = await repository.GetCategoryThreadAsync(new CategoryThreadFilter
@@ -76,15 +76,16 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
-            .WithCategory("b", "Random")
             .WithCategory("a", "Anime")
-            .WithThreadAndOp("b", "Thread in Random");
+            .WithCategory("b", "Random")
+            .WithThread("Thread in Random")
+            .WithPost("OP post", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Thread in Random");
 
         // Act - request thread from category "a" but it's actually in "b"
@@ -106,14 +107,14 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
-            .WithThreadAndOp("b", "Deleted thread", isDeleted: true);
+            .WithThreadAndOp("Deleted thread", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Deleted thread");
 
         // Act
@@ -135,14 +136,14 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
-            .WithThreadAndOp("b", "Deleted thread", isDeleted: true);
+            .WithThreadAndOp("Deleted thread", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Deleted thread");
 
         // Act
@@ -165,14 +166,14 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random", isDeleted: true)
-            .WithThreadAndOp("b", "Thread in deleted category");
+            .WithThreadAndOp("Thread in deleted category");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Thread in deleted category");
 
         // Act
@@ -194,14 +195,14 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random", isDeleted: true)
-            .WithThreadAndOp("b", "Thread in deleted category");
+            .WithThreadAndOp("Thread in deleted category");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var thread = builder.GetThread("Thread in deleted category");
 
         // Act
@@ -225,16 +226,16 @@ internal sealed class GetCategoryThreadTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new ThreadTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
-            .WithThreadAndOp("b", "Thread 1")
-            .WithThreadAndOp("b", "Thread 2")
-            .WithThreadAndOp("b", "Thread 3");
+            .WithThreadAndOp("Thread 1")
+            .WithThreadAndOp("Thread 2")
+            .WithThreadAndOp("Thread 3");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IThreadRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IThreadRepository>();
         var targetThread = builder.GetThread("Thread 2");
 
         // Act

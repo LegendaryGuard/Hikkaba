@@ -11,39 +11,6 @@ namespace Hikkaba.Tests.Integration.Tests.Repositories.Ban;
 
 internal sealed class FindActiveBanTests : IntegrationTestBase
 {
-    private static async Task SeedExactBansDataAsync(IServiceScope scope, CancellationToken cancellationToken)
-    {
-        await new BanTestDataBuilder(scope)
-            .WithDefaultAdmin()
-            .WithDefaultCategory()
-            .WithDefaultThread()
-            .WithPost("176.213.241.52", "Firefox", isOriginalPost: true)
-            .WithExactBan("176.213.241.52", "exact ban reason")
-            .SaveAsync(cancellationToken);
-    }
-
-    private static async Task SeedRangeBansDataAsync(IServiceScope scope, CancellationToken cancellationToken)
-    {
-        await new BanTestDataBuilder(scope)
-            .WithDefaultAdmin()
-            .WithDefaultCategory()
-            .WithDefaultThread()
-            .WithPost("176.213.224.37", "Firefox", isOriginalPost: true)
-            .WithRangeBan("176.213.224.40", "176.213.224.1", "176.213.224.254", "range ban reason")
-            .SaveAsync(cancellationToken);
-    }
-
-    private static async Task SeedCategoryBanDataAsync(IServiceScope scope, CancellationToken cancellationToken)
-    {
-        await new BanTestDataBuilder(scope)
-            .WithDefaultAdmin()
-            .WithDefaultCategory()
-            .WithDefaultThread()
-            .WithPost("192.168.1.100", "Chrome", isOriginalPost: true)
-            .WithExactBan("192.168.1.100", "category ban reason", inCategory: true)
-            .SaveAsync(cancellationToken);
-    }
-
     [CancelAfter(TestDefaults.TestTimeout)]
     [TestCase("176.213.241.52", true, "exact ban reason")]
     [TestCase("176.213.241.53", false, null)]
@@ -56,9 +23,16 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedExactBansDataAsync(appScope.Scope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        await new TestDataBuilder(appScope.ServiceScope)
+            .WithDefaultAdmin()
+            .WithDefaultCategory()
+            .WithDefaultThread()
+            .WithPost("test post", "176.213.241.52", isOriginalPost: true)
+            .WithExactBan("176.213.241.52", "exact ban reason")
+            .SaveAsync(cancellationToken);
+
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse(ipAddress);
 
         // Act
@@ -95,9 +69,16 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedRangeBansDataAsync(appScope.Scope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        await new TestDataBuilder(appScope.ServiceScope)
+            .WithDefaultAdmin()
+            .WithDefaultCategory()
+            .WithDefaultThread()
+            .WithPost("test post", "176.213.224.37", isOriginalPost: true)
+            .WithRangeBan("176.213.224.40", "176.213.224.1", "176.213.224.254", "range ban reason")
+            .SaveAsync(cancellationToken);
+
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse(ipAddress);
 
         // Act
@@ -125,9 +106,16 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedCategoryBanDataAsync(appScope.Scope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        await new TestDataBuilder(appScope.ServiceScope)
+            .WithDefaultAdmin()
+            .WithDefaultCategory()
+            .WithDefaultThread()
+            .WithPost("test post", "192.168.1.100", "Chrome", isOriginalPost: true)
+            .WithExactBan("192.168.1.100", "category ban reason", inCategory: true)
+            .SaveAsync(cancellationToken);
+
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("192.168.1.100");
 
         // Act
@@ -163,15 +151,15 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await new BanTestDataBuilder(appScope.Scope)
+        await new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("192.168.1.50", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "192.168.1.50", isOriginalPost: true)
             .WithExactBan("192.168.1.50", "deleted ban", isDeleted: true)
             .SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("192.168.1.50");
 
         // Act
@@ -191,15 +179,15 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await new BanTestDataBuilder(appScope.Scope)
+        await new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("192.168.1.60", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "192.168.1.60", isOriginalPost: true)
             .WithExactBan("192.168.1.60", "expired ban", isExpired: true)
             .SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("192.168.1.60");
 
         // Act
@@ -210,5 +198,65 @@ internal sealed class FindActiveBanTests : IntegrationTestBase
 
         // Assert
         Assert.That(result, Is.Null);
+    }
+
+    [CancelAfter(TestDefaults.TestTimeout)]
+    [Test]
+    public async Task FindActiveBan_WhenActiveAndExpiredBansExist_ReturnsActiveBan(
+        CancellationToken cancellationToken)
+    {
+        // Arrange
+        using var appScope = await CreateAppScopeAsync(cancellationToken);
+        await new TestDataBuilder(appScope.ServiceScope)
+            .WithDefaultAdmin()
+            .WithDefaultCategory()
+            .WithDefaultThread()
+            .WithPost("test post", "192.168.1.70", isOriginalPost: true)
+            .WithExactBan("192.168.1.70", "expired ban", isExpired: true)
+            .WithExactBan("192.168.1.70", "active ban")
+            .SaveAsync(cancellationToken);
+
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var ip = IPAddress.Parse("192.168.1.70");
+
+        // Act
+        var result = await repository.FindActiveBanAsync(new ActiveBanFilter
+        {
+            UserIpAddress = ip.GetAddressBytes(),
+        }, cancellationToken);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Reason, Is.EqualTo("active ban"));
+    }
+
+    [CancelAfter(TestDefaults.TestTimeout)]
+    [Test]
+    public async Task FindActiveBan_WhenActiveAndDeletedBansExist_ReturnsActiveBan(
+        CancellationToken cancellationToken)
+    {
+        // Arrange
+        using var appScope = await CreateAppScopeAsync(cancellationToken);
+        await new TestDataBuilder(appScope.ServiceScope)
+            .WithDefaultAdmin()
+            .WithDefaultCategory()
+            .WithDefaultThread()
+            .WithPost("test post", "192.168.1.80", isOriginalPost: true)
+            .WithExactBan("192.168.1.80", "deleted ban", isDeleted: true)
+            .WithExactBan("192.168.1.80", "active ban")
+            .SaveAsync(cancellationToken);
+
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var ip = IPAddress.Parse("192.168.1.80");
+
+        // Act
+        var result = await repository.FindActiveBanAsync(new ActiveBanFilter
+        {
+            UserIpAddress = ip.GetAddressBytes(),
+        }, cancellationToken);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Reason, Is.EqualTo("active ban"));
     }
 }

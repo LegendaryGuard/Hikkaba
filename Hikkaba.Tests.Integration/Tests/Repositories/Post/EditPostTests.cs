@@ -20,15 +20,15 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original message", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Original message", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
         var postId = builder.LastPostId;
 
         // Act
@@ -40,7 +40,7 @@ internal sealed class EditPostTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = appScope.ServiceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var updatedPost = await dbContext.Posts.FirstAsync(p => p.Id == postId, cancellationToken);
 
         Assert.That(updatedPost.MessageText, Is.EqualTo("Updated message text"));
@@ -54,16 +54,16 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original message", "192.168.1.100", "Firefox", isOriginalPost: true);
+            .WithPost("Original message", "192.168.1.100", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
-        var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var dbContext = appScope.ServiceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var postId = builder.LastPostId;
 
         var originalPost = await dbContext.Posts.AsNoTracking().FirstAsync(p => p.Id == postId, cancellationToken);
@@ -98,15 +98,15 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original message with content", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Original message with content", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
         var postId = builder.LastPostId;
 
         // Act
@@ -118,7 +118,7 @@ internal sealed class EditPostTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = appScope.ServiceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var updatedPost = await dbContext.Posts.FirstAsync(p => p.Id == postId, cancellationToken);
 
         Assert.That(updatedPost.MessageText, Is.EqualTo(string.Empty));
@@ -132,15 +132,15 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original message", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Original message", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act & Assert
         Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -161,15 +161,15 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Deleted post message", "127.0.0.1", "Firefox", isOriginalPost: true, isDeleted: true);
+            .WithPost("Deleted post message", isOriginalPost: true, isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
         var postId = builder.LastPostId;
 
         // Act
@@ -181,7 +181,7 @@ internal sealed class EditPostTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = appScope.ServiceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var updatedPost = await dbContext.Posts
             .IgnoreQueryFilters()
             .FirstAsync(p => p.Id == postId, cancellationToken);
@@ -197,15 +197,15 @@ internal sealed class EditPostTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Original", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
         var postId = builder.LastPostId;
 
         var specialText = "Message with <special> & \"characters\" 'quotes' \n newlines";
@@ -220,7 +220,7 @@ internal sealed class EditPostTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        var dbContext = appScope.Scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = appScope.ServiceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var updatedPost = await dbContext.Posts.FirstAsync(p => p.Id == postId, cancellationToken);
 
         Assert.That(updatedPost.MessageText, Is.EqualTo(specialText));

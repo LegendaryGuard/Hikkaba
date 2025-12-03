@@ -19,17 +19,17 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Second post", "127.0.0.2", "Chrome")
             .WithPost("Deleted post", "127.0.0.3", "Safari", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter
@@ -54,16 +54,16 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Deleted post", "127.0.0.2", "Chrome", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter
@@ -90,20 +90,17 @@ internal sealed class ListPostsTests : IntegrationTestBase
         using var appScope = await CreateAppScopeAsync(cancellationToken);
 
         // Create visible category with post and hidden category with post using the same builder
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random", isHidden: false)
             .WithThread("Visible thread")
-            .WithPost("Visible post", "127.0.0.1", "Firefox", isOriginalPost: true);
-        await builder.SaveAsync(cancellationToken);
-
-        // Reuse the same builder to add hidden category
-        builder.WithCategory("h", "Hidden", isHidden: true)
+            .WithPost("Visible post", isOriginalPost: true)
+            .WithCategory("h", "Hidden", isHidden: true)
             .WithThread("Hidden thread")
             .WithPost("Hidden post", "127.0.0.2", "Chrome", isOriginalPost: true);
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act - without hidden
         var resultWithoutHidden = await repository.ListPostsAsync(new PostPagingFilter
@@ -141,11 +138,11 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Post 1", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("Post 1", isOriginalPost: true)
             .WithPost("Post 2", "127.0.0.2", "Chrome")
             .WithPost("Post 3", "127.0.0.3", "Safari")
             .WithPost("Post 4", "127.0.0.4", "Edge")
@@ -153,7 +150,7 @@ internal sealed class ListPostsTests : IntegrationTestBase
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act - page 1
         var page1 = await repository.ListPostsAsync(new PostPagingFilter
@@ -195,15 +192,15 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("First post", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter
@@ -228,15 +225,15 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Deleted thread", isDeleted: true)
-            .WithPost("Post in deleted thread", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Post in deleted thread", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter
@@ -261,15 +258,15 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Deleted category", isDeleted: true)
             .WithThread("Thread in deleted category")
-            .WithPost("Post in deleted category", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Post in deleted category", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter
@@ -294,15 +291,15 @@ internal sealed class ListPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Post with attachments", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Post with attachments", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListPostsAsync(new PostPagingFilter

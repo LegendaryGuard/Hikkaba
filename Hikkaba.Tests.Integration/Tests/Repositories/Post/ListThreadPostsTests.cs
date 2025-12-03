@@ -20,22 +20,22 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Second post", "127.0.0.2", "Chrome")
             .WithPost("Deleted post", "127.0.0.3", "Safari", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = false,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
         }, cancellationToken);
@@ -53,21 +53,21 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Deleted post", "127.0.0.2", "Chrome", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = true,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
         }, cancellationToken);
@@ -83,22 +83,22 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Second post", "127.0.0.2", "Chrome");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
         var targetPostId = builder.LastPostId;
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             PostId = targetPostId,
             IncludeDeleted = false,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
@@ -117,20 +117,20 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Deleted thread", isDeleted: true)
-            .WithPost("Post in deleted thread", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Post in deleted thread", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = false,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
         }, cancellationToken);
@@ -146,20 +146,20 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Deleted category", isDeleted: true)
             .WithThread("Thread in deleted category")
-            .WithPost("Post in deleted category", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Post in deleted category", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = false,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
         }, cancellationToken);
@@ -175,22 +175,22 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("First post", "127.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("First post", isOriginalPost: true)
             .WithPost("Second post", "127.0.0.2", "Chrome")
             .WithPost("Third post", "127.0.0.3", "Safari");
 
         await builder.SaveAsync(cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act - order by Id descending (since CreatedAt may be the same for all posts in test)
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = false,
             OrderBy = [new OrderByItem { Field = nameof(Hikkaba.Data.Entities.Post.Id), Direction = OrderByDirection.Desc }],
         }, cancellationToken);
@@ -208,24 +208,21 @@ internal sealed class ListThreadPostsTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new PostTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithCategory("b", "Random")
             .WithThread("Test thread")
-            .WithPost("Original post", "127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("Original post", isOriginalPost: true)
+            .WithPostThatMentionsPost("Reply to original", ipAddress: "127.0.0.2", userAgent: "Chrome");
 
         await builder.SaveAsync(cancellationToken);
 
-        // Add a reply that mentions the original post
-        builder.WithPostReplyingTo("Reply to original", "127.0.0.2", "Chrome", [builder.LastPostId]);
-        await builder.SaveAsync(cancellationToken);
-
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IPostRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IPostRepository>();
 
         // Act
         var result = await repository.ListThreadPostsAsync(new ThreadPostsFilter
         {
-            ThreadId = builder.Thread.Id,
+            ThreadId = builder.LastThread.Id,
             IncludeDeleted = false,
             OrderBy = [nameof(Hikkaba.Data.Entities.Post.CreatedAt)],
         }, cancellationToken);

@@ -14,39 +14,39 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
 {
     private static async Task<long> SeedBasicDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("test post", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
-        return builder.Thread.Id;
+        return builder.LastThread.Id;
     }
 
     private static async Task<long> SeedDataWithBanAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("192.168.1.100", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "192.168.1.100", isOriginalPost: true)
             .WithExactBan("192.168.1.100", "you are banned");
 
         await builder.SaveAsync(cancellationToken);
-        return builder.Thread.Id;
+        return builder.LastThread.Id;
     }
 
     private static async Task<long> SeedClosedThreadDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread(isClosed: true)
-            .WithPost("127.0.0.1", "Firefox", isOriginalPost: true);
+            .WithPost("test post", isOriginalPost: true);
 
         await builder.SaveAsync(cancellationToken);
-        return builder.Thread.Id;
+        return builder.LastThread.Id;
     }
 
     [CancelAfter(TestDefaults.TestTimeout)]
@@ -56,9 +56,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var threadId = await SeedBasicDataAsync(appScope.Scope, cancellationToken);
+        var threadId = await SeedBasicDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("127.0.0.1");
 
         // Act
@@ -86,9 +86,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var threadId = await SeedDataWithBanAsync(appScope.Scope, cancellationToken);
+        var threadId = await SeedDataWithBanAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("192.168.1.100");
 
         // Act
@@ -115,9 +115,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedBasicDataAsync(appScope.Scope, cancellationToken);
+        await SeedBasicDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("127.0.0.1");
 
         // Act
@@ -140,9 +140,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedBasicDataAsync(appScope.Scope, cancellationToken);
+        await SeedBasicDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("127.0.0.1");
 
         // Act
@@ -165,9 +165,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedBasicDataAsync(appScope.Scope, cancellationToken);
+        await SeedBasicDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetPostingRestrictionStatusAsync(new PostingRestrictionsRequestModel
@@ -189,9 +189,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var threadId = await SeedClosedThreadDataAsync(appScope.Scope, cancellationToken);
+        var threadId = await SeedClosedThreadDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("127.0.0.1");
 
         // Act
@@ -214,9 +214,9 @@ internal sealed class GetPostingRestrictionStatusTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedBasicDataAsync(appScope.Scope, cancellationToken);
+        await SeedBasicDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = IPAddress.Parse("127.0.0.1");
 
         // Act

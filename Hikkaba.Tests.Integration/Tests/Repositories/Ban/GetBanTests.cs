@@ -12,11 +12,11 @@ internal sealed class GetBanTests : IntegrationTestBase
 {
     private static async Task<int> SeedExactBanDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("176.213.241.52", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "176.213.241.52", isOriginalPost: true)
             .WithExactBan("176.213.241.52", "test ban reason");
 
         await builder.SaveAsync(cancellationToken);
@@ -25,11 +25,11 @@ internal sealed class GetBanTests : IntegrationTestBase
 
     private static async Task<int> SeedRangeBanDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("192.168.1.1", "Chrome", isOriginalPost: true)
+            .WithPost("test post", "192.168.1.1", "Chrome", isOriginalPost: true)
             .WithRangeBan("192.168.1.50", "192.168.1.1", "192.168.1.254", "range ban reason");
 
         await builder.SaveAsync(cancellationToken);
@@ -43,9 +43,9 @@ internal sealed class GetBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var banId = await SeedExactBanDataAsync(appScope.Scope, cancellationToken);
+        var banId = await SeedExactBanDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetBanAsync(banId, cancellationToken);
@@ -70,9 +70,9 @@ internal sealed class GetBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var banId = await SeedRangeBanDataAsync(appScope.Scope, cancellationToken);
+        var banId = await SeedRangeBanDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetBanAsync(banId, cancellationToken);
@@ -92,9 +92,9 @@ internal sealed class GetBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        await SeedExactBanDataAsync(appScope.Scope, cancellationToken);
+        await SeedExactBanDataAsync(appScope.ServiceScope, cancellationToken);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetBanAsync(999999, cancellationToken);
@@ -110,17 +110,17 @@ internal sealed class GetBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new BanTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("10.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "10.0.0.1", isOriginalPost: true)
             .WithExactBan("10.0.0.1", "deleted ban reason", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
         var banId = builder.LastBanId;
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetBanAsync(banId, cancellationToken);
@@ -139,17 +139,17 @@ internal sealed class GetBanTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new BanTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("172.16.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "172.16.0.1", isOriginalPost: true)
             .WithExactBan("172.16.0.1", "category ban reason", inCategory: true);
 
         await builder.SaveAsync(cancellationToken);
         var banId = builder.LastBanId;
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Act
         var result = await repository.GetBanAsync(banId, cancellationToken);

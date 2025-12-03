@@ -13,11 +13,11 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
 {
     private static async Task<(int banId, int adminId)> SeedBanDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
-        var builder = new BanTestDataBuilder(scope)
+        var builder = new TestDataBuilder(scope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("192.168.1.100", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "192.168.1.100", isOriginalPost: true)
             .WithExactBan("192.168.1.100", "test ban reason");
 
         await builder.SaveAsync(cancellationToken);
@@ -43,10 +43,10 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var (banId, adminId) = await SeedBanDataAsync(appScope.Scope, cancellationToken);
-        SetupUserContext(appScope.Scope, adminId);
+        var (banId, adminId) = await SeedBanDataAsync(appScope.ServiceScope, cancellationToken);
+        SetupUserContext(appScope.ServiceScope, adminId);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Verify ban is not deleted initially
         var banBefore = await repository.GetBanAsync(banId, cancellationToken);
@@ -71,17 +71,17 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new BanTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("10.0.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "10.0.0.1", isOriginalPost: true)
             .WithExactBan("10.0.0.1", "deleted ban", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
-        SetupUserContext(appScope.Scope, builder.Admin.Id);
+        SetupUserContext(appScope.ServiceScope, builder.Admin.Id);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Verify ban is deleted initially
         var banBefore = await repository.GetBanAsync(builder.LastBanId, cancellationToken);
@@ -106,10 +106,10 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var (banId, adminId) = await SeedBanDataAsync(appScope.Scope, cancellationToken);
-        SetupUserContext(appScope.Scope, adminId);
+        var (banId, adminId) = await SeedBanDataAsync(appScope.ServiceScope, cancellationToken);
+        SetupUserContext(appScope.ServiceScope, adminId);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
 
         // Delete the ban first
         await repository.SetBanDeletedAsync(banId, true, cancellationToken);
@@ -135,10 +135,10 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var (banId, adminId) = await SeedBanDataAsync(appScope.Scope, cancellationToken);
-        SetupUserContext(appScope.Scope, adminId);
+        var (banId, adminId) = await SeedBanDataAsync(appScope.ServiceScope, cancellationToken);
+        SetupUserContext(appScope.ServiceScope, adminId);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = System.Net.IPAddress.Parse("192.168.1.100");
 
         // Verify ban is found before deletion
@@ -166,17 +166,17 @@ internal sealed class SetBanDeletedTests : IntegrationTestBase
     {
         // Arrange
         using var appScope = await CreateAppScopeAsync(cancellationToken);
-        var builder = new BanTestDataBuilder(appScope.Scope)
+        var builder = new TestDataBuilder(appScope.ServiceScope)
             .WithDefaultAdmin()
             .WithDefaultCategory()
             .WithDefaultThread()
-            .WithPost("172.16.0.1", "Firefox", isOriginalPost: true)
+            .WithPost("test post", "172.16.0.1", isOriginalPost: true)
             .WithExactBan("172.16.0.1", "ban to restore", isDeleted: true);
 
         await builder.SaveAsync(cancellationToken);
-        SetupUserContext(appScope.Scope, builder.Admin.Id);
+        SetupUserContext(appScope.ServiceScope, builder.Admin.Id);
 
-        var repository = appScope.Scope.ServiceProvider.GetRequiredService<IBanRepository>();
+        var repository = appScope.ServiceScope.ServiceProvider.GetRequiredService<IBanRepository>();
         var ip = System.Net.IPAddress.Parse("172.16.0.1");
 
         // Verify ban is NOT found before restoration
