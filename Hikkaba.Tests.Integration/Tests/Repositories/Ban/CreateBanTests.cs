@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hikkaba.Data.Context;
 using Hikkaba.Infrastructure.Models.Ban;
+using Hikkaba.Infrastructure.Models.Error;
 using Hikkaba.Infrastructure.Repositories.Contracts;
+using Hikkaba.Shared.Constants;
 using Hikkaba.Shared.Enums;
 using Hikkaba.Tests.Integration.Builders;
 using Hikkaba.Tests.Integration.Constants;
@@ -20,7 +22,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
     private static async Task<(long threadId, long postId, int adminId)> SeedBasicDataAsync(IServiceScope scope, CancellationToken cancellationToken)
     {
         var builder = new TestDataBuilder(scope)
-            .WithDefaultAdmin()
+            .WithUser(Defaults.AdministratorUserName, isAdmin: true)
             .WithDefaultCategory()
             .WithDefaultThread()
             .WithPost("test post", "192.168.1.100", isOriginalPost: true);
@@ -68,7 +70,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT0, Is.True, "Expected success result");
+        Assert.That(result.Value, Is.TypeOf<BanCreateResultSuccessModel>(), "Expected success result");
         var successResult = result.AsT0;
         Assert.That(successResult.BanId, Is.GreaterThan(0));
 
@@ -118,9 +120,9 @@ internal sealed class CreateBanTests : IntegrationTestBase
         var result = await repository.CreateBanAsync(request, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT1, Is.True, "Expected error result");
+        Assert.That(result.Value, Is.TypeOf<DomainError>(), "Expected error result");
         var error = result.AsT1;
-        Assert.That(error.StatusCode, Is.EqualTo(409)); // Conflict
+        Assert.That(error.StatusCode, Is.EqualTo((int)HttpStatusCode.Conflict));
     }
 
     [CancelAfter(TestDefaults.TestTimeout)]
@@ -156,7 +158,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT0, Is.True, "Expected success result");
+        Assert.That(result.Value, Is.TypeOf<BanCreateResultSuccessModel>(), "Expected success result");
         var successResult = result.AsT0;
 
         var ban = await repository.GetBanAsync(successResult.BanId, cancellationToken);
@@ -199,7 +201,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT0, Is.True, "Expected success result");
+        Assert.That(result.Value, Is.TypeOf<BanCreateResultSuccessModel>(), "Expected success result");
 
         var post = await dbContext.Posts.FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
         Assert.That(post, Is.Not.Null);
@@ -241,7 +243,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT0, Is.True, "Expected success result");
+        Assert.That(result.Value, Is.TypeOf<BanCreateResultSuccessModel>(), "Expected success result");
         var successResult = result.AsT0;
 
         var ban = await repository.GetBanAsync(successResult.BanId, cancellationToken);
@@ -260,7 +262,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
 
         // First, create posts from the IP that will be banned
         var builder = new TestDataBuilder(appScope.ServiceScope)
-            .WithDefaultAdmin()
+            .WithUser(Defaults.AdministratorUserName, isAdmin: true)
             .WithDefaultCategory()
             .WithDefaultThread()
             .WithPost("test post", "192.168.1.100", isOriginalPost: true)
@@ -301,7 +303,7 @@ internal sealed class CreateBanTests : IntegrationTestBase
         }, cancellationToken);
 
         // Assert
-        Assert.That(result.IsT0, Is.True, "Expected success result");
+        Assert.That(result.Value, Is.TypeOf<BanCreateResultSuccessModel>(), "Expected success result");
 
         var posts = await dbContext.Posts
             .IgnoreQueryFilters()
